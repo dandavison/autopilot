@@ -24,16 +24,27 @@ def send_code_to_ai_api(code, error_output):
 
     openai.api_key = api_key
 
-    response = openai.Completion.create(
-        engine="davinci-codex",
-        prompt=f"Fix the following Python code:\n\n{code}\n\nError output:\n\n{error_output}\n\nModified code:",
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a code-fixing assistant."},
+            {
+                "role": "user",
+                "content": f"""
+Fix the following Python code:\n\n{code}\n\nError output:\n\n{error_output}.
+Here is the fixed code ```python
+""",
+            },
+        ],
         max_tokens=100,
         n=1,
         stop=None,
         temperature=0.5,
     )
 
-    fixed_code = response.choices[0].text.strip()
+    fixed_code = response.choices[0].message["content"].strip()
+    if "```" in fixed_code:
+        fixed_code = fixed_code.partition("```")[0]
     return fixed_code
 
 
